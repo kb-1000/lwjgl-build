@@ -2,7 +2,8 @@
     "repo": "lwjgl3",
     "excludes": [
         "generated",
-        "doc/notes/*"
+        "doc/notes/*",
+        "modules/*/*/generated/*"
     ],
     "patches": {
     }
