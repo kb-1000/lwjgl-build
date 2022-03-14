@@ -1,0 +1,77 @@
+From 8567ff189f10b58e48fecb316ccdac351a061d4b Mon Sep 17 00:00:00 2001
+From: kb1000
+Date: Wed, 23 Feb 2022 01:44:11 +0100
+Subject: [PATCH] fix(core) dlerror decoding. Close #738
+
+---
+ doc/notes/3.3.2.md                                              | 1 +
+ .../java/org/lwjgl/system/linux/DynamicLinkLoader.java          | 2 +-
+ .../java/org/lwjgl/system/macosx/DynamicLinkLoader.java         | 2 +-
+ .../templates/kotlin/core/linux/templates/DynamicLinkLoader.kt  | 2 +-
+ .../templates/kotlin/core/macos/templates/DynamicLinkLoader.kt  | 2 +-
+ 5 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/doc/notes/3.3.2.md b/doc/notes/3.3.2.md
+index 996c01017..8eb95abf7 100644
+--- a/doc/notes/3.3.2.md
++++ b/doc/notes/3.3.2.md
+@@ -13,6 +13,7 @@ This build includes the following changes:
+ #### Fixes
+ 
+ - Core: Fixed Java/native library incompatibility detection. (#737)
++- Core: Fixed `dlerror` decoding to use UTF-8. (#738)
+ - Build: Fixed offline mode with multiple local architectures. (#740)
+ 
+ #### Breaking Changes
+diff --git a/modules/lwjgl/core/src/generated/java/org/lwjgl/system/linux/DynamicLinkLoader.java b/modules/lwjgl/core/src/generated/java/org/lwjgl/system/linux/DynamicLinkLoader.java
+index cb9170ae5..785aaffb6 100644
+--- a/modules/lwjgl/core/src/generated/java/org/lwjgl/system/linux/DynamicLinkLoader.java
++++ b/modules/lwjgl/core/src/generated/java/org/lwjgl/system/linux/DynamicLinkLoader.java
+@@ -99,7 +99,7 @@ public static long dlopen(@Nullable @NativeType("char const *") CharSequence fil
+     @NativeType("char *")
+     public static String dlerror() {
+         long __result = ndlerror();
+-        return memASCIISafe(__result);
++        return memUTF8Safe(__result);
+     }
+ 
+     // --- [ dlsym ] ---
+diff --git a/modules/lwjgl/core/src/generated/java/org/lwjgl/system/macosx/DynamicLinkLoader.java b/modules/lwjgl/core/src/generated/java/org/lwjgl/system/macosx/DynamicLinkLoader.java
+index 525b419fa..73d702a18 100644
+--- a/modules/lwjgl/core/src/generated/java/org/lwjgl/system/macosx/DynamicLinkLoader.java
++++ b/modules/lwjgl/core/src/generated/java/org/lwjgl/system/macosx/DynamicLinkLoader.java
+@@ -197,7 +197,7 @@ public static long dlopen(@Nullable @NativeType("char const *") CharSequence pat
+     @NativeType("char const *")
+     public static String dlerror() {
+         long __result = ndlerror();
+-        return memASCIISafe(__result);
++        return memUTF8Safe(__result);
+     }
+ 
+     // --- [ dlsym ] ---
+diff --git a/modules/lwjgl/core/src/templates/kotlin/core/linux/templates/DynamicLinkLoader.kt b/modules/lwjgl/core/src/templates/kotlin/core/linux/templates/DynamicLinkLoader.kt
+index 7708285e2..46bc42e5c 100644
+--- a/modules/lwjgl/core/src/templates/kotlin/core/linux/templates/DynamicLinkLoader.kt
++++ b/modules/lwjgl/core/src/templates/kotlin/core/linux/templates/DynamicLinkLoader.kt
+@@ -56,7 +56,7 @@ val dlfcn = "DynamicLinkLoader".nativeClass(Module.CORE_LINUX, nativeSubPath = "
+         int("mode", "a bitfield", Modes, LinkMode.BITFIELD)
+     )
+ 
+-    charASCII.p(
++    charUTF8.p(
+         "dlerror",
+         """
+         Returns a human readable string describing the most recent error that occurred from #dlopen(), #dlsym() or #dlclose() since
+diff --git a/modules/lwjgl/core/src/templates/kotlin/core/macos/templates/DynamicLinkLoader.kt b/modules/lwjgl/core/src/templates/kotlin/core/macos/templates/DynamicLinkLoader.kt
+index e2bc502ca..d494d43d4 100644
+--- a/modules/lwjgl/core/src/templates/kotlin/core/macos/templates/DynamicLinkLoader.kt
++++ b/modules/lwjgl/core/src/templates/kotlin/core/macos/templates/DynamicLinkLoader.kt
+@@ -97,7 +97,7 @@ val dlfcn = "DynamicLinkLoader".nativeClass(Module.CORE_MACOS, nativeSubPath = "
+         )
+     )
+ 
+-    charASCII.const.p(
++    charUTF8.const.p(
+         "dlerror",
+         """
+         Provides diagnostic information corresponding to problems with calls to #dlopen(), #dlsym(), and #dlclose() in the same thread.
